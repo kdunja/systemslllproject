@@ -1,8 +1,7 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./Login";
 import Dashboard from "./Dashboard";
-import ProtectedRoute from "./ProtectedRoute";
+import LoadBoard from "./LoadBoard";
+import Login from "./Login";
 import Register from "./Register";
 
 function App() {
@@ -10,18 +9,13 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
         <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/loads" element={<LoadBoard />} />
       </Routes>
     </Router>
   );
 }
 
 export default App;
+

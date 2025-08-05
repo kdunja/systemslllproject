@@ -1,17 +1,11 @@
 import React from "react";
-
-function isValidJson(str) {
-  try {
-    JSON.parse(str);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
+  const navigate = useNavigate();
+
   const storedUser = localStorage.getItem("user");
-  const user = storedUser && isValidJson(storedUser) ? JSON.parse(storedUser) : null;
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
   if (!user) {
     return (
@@ -27,6 +21,13 @@ function Dashboard() {
       <h2>Welcome, {user.username}!</h2>
       <p>Email: {user.email}</p>
       <p>Role: {user.role}</p>
+
+      <button
+        onClick={() => navigate("/loads")}
+        style={{ margin: "10px", padding: "10px 20px" }}
+      >
+        Go to Load Board
+      </button>
 
       <button
         onClick={() => {
