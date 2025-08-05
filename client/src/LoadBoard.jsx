@@ -4,6 +4,9 @@ import EditLoadForm from "./EditLoadForm";
 import LoadDetails from "./LoadDetails";
 import axios from "axios";
 import RatingModal from "./RatingModal";
+import MessageModal from "./MessageModal";
+import Header from "./Header";
+
 
 
 function LoadBoard() {
@@ -155,11 +158,15 @@ function LoadBoard() {
 
   const [ratingTargetUserId, setRatingTargetUserId] = useState(null);
 
+  const [messageTargetUserId, setMessageTargetUserId] = useState(null);
+
+
   if (loading) return <p>Loading loads...</p>;
 
   return (
+      <div style={{ margin: 0, padding: 0 }}>
+    <Header />
     <div style={{ padding: "20px" }}>
-      <h2>Load Management Board</h2>
 
       <AddLoadForm onLoadAdded={handleLoadAdded} />
 
@@ -291,6 +298,17 @@ function LoadBoard() {
   Rate
 </button>
 
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    setMessageTargetUserId(load.userId);
+  }}
+  style={{ marginLeft: "10px" }}
+>
+  Message
+</button>
+
+
               </td>
             </tr>
           ))}
@@ -316,6 +334,16 @@ function LoadBoard() {
   />
 )}
 
+{messageTargetUserId && (
+  <MessageModal
+    senderId={1} // TODO: zameniti kad se login implementira
+    recipientId={messageTargetUserId}
+    onClose={() => setMessageTargetUserId(null)}
+  />
+)}
+
+
+    </div>
     </div>
   );
 }

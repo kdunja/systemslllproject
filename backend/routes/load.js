@@ -64,10 +64,31 @@ let ratings = [
   }
 ];
 
+// Simulated private messages
+let messages = [
+  {
+    messageId: 1,
+    senderId: 1,
+    recipientId: 2,
+    text: "Hello, are you available for the next shipment?",
+    timestamp: new Date().toISOString()
+  }
+];
+
+
 // GET all load assignments
 router.get("/loadassignments", (req, res) => {
   res.status(200).json(loads);
 });
+
+router.get("/messages/:userId", (req, res) => {
+  const userId = parseInt(req.params.userId);
+  const userMessages = messages.filter(
+    (m) => m.senderId === userId || m.recipientId === userId
+  );
+  res.status(200).json(userMessages);
+});
+
 
 // POST new load assignment
 router.post("/loadassignments", (req, res) => {
@@ -205,5 +226,25 @@ router.get("/ratings/:userId", (req, res) => {
   const userRatings = ratings.filter(r => r.userId === id);
   res.status(200).json(userRatings);
 });
+
+router.post("/messages", (req, res) => {
+  const { senderId, recipientId, text } = req.body;
+
+  if (!senderId || !recipientId || !text) {
+    return res.status(400).json({ msg: "Sender, recipient, and text are required." });
+  }
+
+  const newMessage = {
+    messageId: messages.length + 1,
+    senderId,
+    recipientId,
+    text,
+    timestamp: new Date().toISOString()
+  };
+
+  messages.push(newMessage);
+  res.status(201).json(newMessage);
+});
+
 
 module.exports = router;
