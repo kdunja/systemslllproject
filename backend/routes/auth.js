@@ -1,75 +1,60 @@
 const express = require("express");
-const bcrypt = require("bcrypt");
 const router = express.Router();
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const db = require("../db");
 
-// Test ruta da proveriš da li auth router radi
-router.get("/test", (req, res) => {
-  res.send("Auth ruta radi! 🔐");
-});
+// Tajna za JWT token (kasnije prebacujemo u .env)
+const JWT_SECRET = "tajna123";
 
-// Registracija korisnika (simulacija)
 router.post("/register", async (req, res) => {
   const { username, email, password, role, name, surname, phonenumber } = req.body;
 
   if (!username || !email || !password || !role) {
-    return res.status(400).json({ msg: "Please fill in all required fields." });
+    return res.status(400).json({ error: "Fill out all the information" });
   }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    const sql = `INSERT INTO User (username, email, password, role, name, surname, phonenumber)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-    console.log("Simulated registration:", {
-      username,
-      email,
-      password: hashedPassword,
-      role,
-      name,
-      surname,
-      phonenumber
+    db.query(sql, [username, email, hashedPassword, role, name, surname, phonenumber], (err, result) => {
+      if (err) {
+        console.error("Error:", err.message);
+        return res.status(500).json({ error: "Error" });
+      }
+      res.status(201).json({ message: "Succsesful registration!" });
     });
-
-    return res.status(201).json({ msg: "Registration successful!" });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ msg: "Server error during registration." });
+    res.status(500).json({ error: "Servis error." });
   }
 });
 
-// Dummy login ruta sa fiksiranim korisnikom
-router.post("/login", async (req, res) => {
+// Login
+router.post("/login", (req, res) => {
   const { email, password } = req.body;
 
-  // Dummy korisnik sa heširanom lozinkom
-  const dummyUser = {
-    email: "test@example.com",
-    passwordHash: await bcrypt.hash("mojalozinka123", 10),
-    username: "testuser",
-    role: "carrier",
-    userId: 1
-  };
-
-  if (email !== dummyUser.email) {
-    return res.status(401).json({ msg: "User not found." });
-  }
-
-  const isPasswordCorrect = await bcrypt.compare(password, dummyUser.passwordHash);
-
-  if (!isPasswordCorrect) {
-    return res.status(401).json({ msg: "Wrong password." });
-  }
-
-  const token = jwt.sign({ id: dummyUser.userId, role: dummyUser.role }, "tajni_kljuc", { expiresIn: "1h" });
-
-  return res.status(200).json({
-    msg: "Login successful!",
-    token,
-    user: {
-      id: dummyUser.userId,
-      username: dummyUser.username,
-      email: dummyUser.email,
-      role: dummyUser.role
+  const sql = `SELECT * FROM User WHERE email = ?`;
+  db.query(sql, [email], async (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(401).json({ error: "User does not exist." });
     }
+
+    const user = results[0];
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Wrong password." });
+    }
+
+    const token = jwt.sign(
+      { userId: user.userId, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    res.json({ message: "Succesfull registration!", token, role: user.role, username: user.username });
   });
 });
 

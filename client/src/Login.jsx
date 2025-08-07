@@ -50,7 +50,19 @@ export default function Login() {
           Log in
         </button>
         <p>
-  Don't have an account? <a href="/register">Register here</a>
+  Don't have an account? <a
+  href="/register"
+  style={{
+    color: "#EB5E28",
+    textDecoration: "none",
+    fontWeight: "bold"
+  }}
+  onMouseEnter={(e) => e.target.style.textDecoration = "underline"}
+  onMouseLeave={(e) => e.target.style.textDecoration = "none"}
+>
+  Register here
+</a>
+
 </p>
       </form>
     </div>

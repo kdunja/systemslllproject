@@ -1,250 +1,105 @@
 const express = require("express");
 const router = express.Router();
+const db = require("../db");
 
-// Simulated load assignments
-let loads = [
-  {
-    loadassignmentId: 1,
-    userId: 1,
-    title: "Trip Belgrade - Niš",
-    description: "Electronics in boxes",
-    status: "open",
-    timestamp: new Date().toISOString()
-  },
-  {
-    loadassignmentId: 2,
-    userId: 2,
-    title: "Pančevo - Zrenjanin",
-    description: "Construction materials",
-    status: "in-progress",
-    timestamp: new Date().toISOString()
-  }
-];
+// Create a new load assignment
+router.post("/loads", (req, res) => {
+  const { userId, title, status, description } = req.body;
 
-// Simulated cargo data
-let cargo = [
-  {
-    cargoId: 1,
-    loadassignmentId: 1,
-    destination: "Niš",
-    cargotype: "Electronics",
-    cargoweight: 500,
-    pickuptime: "2025-08-05T08:00",
-    delieverytime: "2025-08-05T12:00"
-  },
-  {
-    cargoId: 2,
-    loadassignmentId: 1,
-    destination: "Leskovac",
-    cargotype: "Electronics",
-    cargoweight: 200,
-    pickuptime: "2025-08-05T13:00",
-    delieverytime: "2025-08-05T15:00"
-  },
-  {
-    cargoId: 3,
-    loadassignmentId: 2,
-    destination: "Zrenjanin",
-    cargotype: "Construction",
-    cargoweight: 1500,
-    pickuptime: "2025-08-05T09:00",
-    delieverytime: "2025-08-05T11:00"
-  }
-];
-
-// Simulated user ratings
-let ratings = [
-  {
-    ratingId: 1,
-    userId: 2,       // the one being rated
-    authorId: 1,     // who gave the rating
-    stars: 5,
-    comment: "Great cooperation!",
-    timestamp: new Date().toISOString()
-  }
-];
-
-// Simulated private messages
-let messages = [
-  {
-    messageId: 1,
-    senderId: 1,
-    recipientId: 2,
-    text: "Hello, are you available for the next shipment?",
-    timestamp: new Date().toISOString()
-  }
-];
-
-
-// GET all load assignments
-router.get("/loadassignments", (req, res) => {
-  res.status(200).json(loads);
-});
-
-router.get("/messages/:userId", (req, res) => {
-  const userId = parseInt(req.params.userId);
-  const userMessages = messages.filter(
-    (m) => m.senderId === userId || m.recipientId === userId
-  );
-  res.status(200).json(userMessages);
-});
-
-
-// POST new load assignment
-router.post("/loadassignments", (req, res) => {
-  const { userId, title, description, status } = req.body;
-
-  if (!userId || !title || !description || !status) {
-    return res.status(400).json({ msg: "Please fill in all required fields." });
+  if (!userId || !title) {
+    return res.status(400).json({ error: "Fields 'userId' and 'title' are required." });
   }
 
-  const newLoad = {
-    loadassignmentId: loads.length + 1,
-    userId,
-    title,
-    description,
-    status,
-    timestamp: new Date().toISOString()
-  };
+  const sql = `
+    INSERT INTO LoadAssignment (userId, title, status, description)
+    VALUES (?, ?, ?, ?)
+  `;
 
-  loads.push(newLoad);
-  return res.status(201).json(newLoad);
+  db.query(sql, [userId, title, status || "open", description || ""], (err, result) => {
+    if (err) {
+      console.error("Error while inserting load assignment:", err.message);
+      return res.status(500).json({ error: "Server error while adding load assignment." });
+    }
+
+    res.status(201).json({
+      message: "Load assignment successfully created.",
+      loadassignmentId: result.insertId
+    });
+  });
 });
 
-// DELETE load assignment
-router.delete("/loadassignments/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const index = loads.findIndex(load => load.loadassignmentId === id);
+// Get all load assignments
+router.get("/loads", (req, res) => {
+  const sql = "SELECT * FROM LoadAssignment";
 
-  if (index === -1) {
-    return res.status(404).json({ msg: "Load not found." });
-  }
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching load assignments:", err.message);
+      return res.status(500).json({ error: "Server error while fetching load assignments." });
+    }
 
-  loads.splice(index, 1);
-  cargo = cargo.filter(c => c.loadassignmentId !== id); // delete related cargo
-
-  res.json({ msg: "Load successfully deleted." });
+    res.json(results);
+  });
 });
 
-// PUT update load assignment
-router.put("/loadassignments/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const { title, description, status } = req.body;
+// Get a single load assignment by ID
+router.get("/loads/:id", (req, res) => {
+  const { id } = req.params;
 
-  const index = loads.findIndex(load => load.loadassignmentId === id);
-  if (index === -1) {
-    return res.status(404).json({ msg: "Load not found." });
-  }
+  const sql = "SELECT * FROM LoadAssignment WHERE loadassignmentId = ?";
 
-  if (!title || !description || !status) {
-    return res.status(400).json({ msg: "Please fill in all required fields." });
-  }
+  db.query(sql, [id], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(404).json({ error: "Load assignment not found." });
+    }
 
-  loads[index] = {
-    ...loads[index],
-    title,
-    description,
-    status,
-    timestamp: new Date().toISOString()
-  };
-
-  res.json({ msg: "Load updated successfully.", load: loads[index] });
+    res.json(results[0]);
+  });
 });
 
-// GET cargo for a specific load assignment
-router.get("/cargo/:loadassignmentId", (req, res) => {
-  const id = parseInt(req.params.loadassignmentId);
-  const relatedCargo = cargo.filter(item => item.loadassignmentId === id);
-  res.status(200).json(relatedCargo);
+// Update a load assignment
+router.put("/loads/:id", (req, res) => {
+  const { id } = req.params;
+  const { title, status, description } = req.body;
+
+  const sql = `
+    UPDATE LoadAssignment
+    SET title = ?, status = ?, description = ?
+    WHERE loadassignmentId = ?
+  `;
+
+  db.query(sql, [title, status, description, id], (err, result) => {
+    if (err) {
+      console.error("Error updating load assignment:", err.message);
+      return res.status(500).json({ error: "Server error while updating load assignment." });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Load assignment not found." });
+    }
+
+    res.json({ message: "Load assignment updated successfully." });
+  });
 });
 
-// GET all cargo
-router.get("/cargo/all", (req, res) => {
-  res.status(200).json(cargo);
+// Delete a load assignment
+router.delete("/loads/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = "DELETE FROM LoadAssignment WHERE loadassignmentId = ?";
+
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("Error deleting load assignment:", err.message);
+      return res.status(500).json({ error: "Server error while deleting load assignment." });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Load assignment not found." });
+    }
+
+    res.json({ message: "Load assignment deleted successfully." });
+  });
 });
-
-// POST new cargo
-router.post("/cargo", (req, res) => {
-  const {
-    loadassignmentId,
-    destination,
-    cargotype,
-    cargoweight,
-    pickuptime,
-    delieverytime
-  } = req.body;
-
-  if (
-    !loadassignmentId ||
-    !destination ||
-    !cargotype ||
-    !cargoweight ||
-    !pickuptime ||
-    !delieverytime
-  ) {
-    return res.status(400).json({ msg: "Please fill in all cargo fields." });
-  }
-
-  const newCargo = {
-    cargoId: cargo.length + 1,
-    loadassignmentId,
-    destination,
-    cargotype,
-    cargoweight,
-    pickuptime,
-    delieverytime
-  };
-
-  cargo.push(newCargo);
-  res.status(201).json(newCargo);
-});
-
-// POST new rating
-router.post("/ratings", (req, res) => {
-  const { userId, authorId, stars, comment } = req.body;
-
-  if (!userId || !authorId || !stars) {
-    return res.status(400).json({ msg: "User ID, Author ID, and stars are required." });
-  }
-
-  const newRating = {
-    ratingId: ratings.length + 1,
-    userId,
-    authorId,
-    stars,
-    comment: comment || "",
-    timestamp: new Date().toISOString()
-  };
-
-  ratings.push(newRating);
-  res.status(201).json(newRating);
-});
-
-// GET all ratings for a user
-router.get("/ratings/:userId", (req, res) => {
-  const id = parseInt(req.params.userId);
-  const userRatings = ratings.filter(r => r.userId === id);
-  res.status(200).json(userRatings);
-});
-
-router.post("/messages", (req, res) => {
-  const { senderId, recipientId, text } = req.body;
-
-  if (!senderId || !recipientId || !text) {
-    return res.status(400).json({ msg: "Sender, recipient, and text are required." });
-  }
-
-  const newMessage = {
-    messageId: messages.length + 1,
-    senderId,
-    recipientId,
-    text,
-    timestamp: new Date().toISOString()
-  };
-
-  messages.push(newMessage);
-  res.status(201).json(newMessage);
-});
-
 
 module.exports = router;

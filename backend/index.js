@@ -1,42 +1,27 @@
 const express = require("express");
+const app = express();
 const cors = require("cors");
-const mysql = require("mysql2");
-const dotenv = require("dotenv");
+require("dotenv").config();
+
+// Import routes
 const authRoutes = require("./routes/auth");
 const loadRoutes = require("./routes/load");
 
-dotenv.config();
-
-const app = express();
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use("/api/auth", authRoutes);
-app.use("/api", loadRoutes);
 
+// Register routes
+app.use("/api", loadRoutes);   // Register /api/loads routes first
+app.use("/api", authRoutes);   // Register /api/login and /api/register
 
-
-// const db = mysql.createConnection({
-//   host: "88.200.63.148",
-//   user: "studenti",
-//   password: "S039C8R7",
-//   database: "SISIII2025_89201011"
-// });
-
-// db.connect((err) => {
-//   if (err) {
-//     console.error("Greška pri konekciji:", err);
-//   } else {
-//     console.log("Uspešno povezano na bazu MySQL!");
-//   }
-// });
-
-
-// Početna ruta
+// Test route
 app.get("/", (req, res) => {
-  res.send("API radi 🎉");
+  res.send("🚚 Express server for Load Management is running!");
 });
 
-// Server start
-app.listen(3001, () => {
-  console.log("Server je pokrenut na http://localhost:3001");
+// Start the server
+const PORT = process.env.PORT || 7210;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });

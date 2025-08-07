@@ -170,19 +170,30 @@ function LoadBoard() {
 
       <AddLoadForm onLoadAdded={handleLoadAdded} />
 
-      <div style={{ marginBottom: "15px", display: "flex", flexWrap: "wrap", gap: "10px" }}>
+      <div
+  style={{
+    backgroundColor: "rgba(37, 36, 34, 0.8)", // 252422 sa providnošću
+    padding: "20px",
+    borderRadius: "12px",
+    marginBottom: "20px",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "12px",
+    justifyContent: "space-between"
+  }}
+>
         <input
           type="text"
           placeholder="Search by title or description"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: "5px" }}
+          style={{ padding: "5px", width: "180px" }}
         />
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: "5px" }}
+          style={{ padding: "5px", width: "120px" }}
         >
           <option value="">All statuses</option>
           <option value="open">Open</option>
@@ -193,7 +204,7 @@ function LoadBoard() {
         <select
           value={selectedCity}
           onChange={(e) => setSelectedCity(e.target.value)}
-          style={{ padding: "5px" }}
+          style={{ padding: "5px", width: "120px" }}
         >
           <option value="">All cities</option>
           {[...new Set(cargoData.map((c) => c.destination))].map((city) => (
@@ -204,7 +215,7 @@ function LoadBoard() {
         <select
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
-          style={{ padding: "5px" }}
+          style={{ padding: "5px", width: "120px" }}
         >
           <option value="">All types</option>
           {[...new Set(cargoData.map((c) => c.cargotype))].map((type) => (
@@ -216,29 +227,33 @@ function LoadBoard() {
           type="datetime-local"
           value={pickupAfter}
           onChange={(e) => setPickupAfter(e.target.value)}
-          style={{ padding: "5px" }}
+          style={{ padding: "5px", width: "120px" }}
         />
 
         <input
           type="datetime-local"
           value={deliveryBefore}
           onChange={(e) => setDeliveryBefore(e.target.value)}
-          style={{ padding: "5px" }}
+          style={{ padding: "5px", width: "120px" }}
         />
 
         <button
   onClick={resetFilters}
   style={{
-    padding: "5px 10px",
-    backgroundColor: "#ddd",
-    border: "1px solid #aaa",
-    borderRadius: "4px",
-    cursor: "pointer"
+    padding: "10px 16px",
+    backgroundColor: "#EB5E28", // narandžasta iz palete
+    color: "#FFFcf2",
+    border: "none",
+    borderRadius: "6px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease"
   }}
+  onMouseEnter={(e) => e.target.style.backgroundColor = "#cc4d1e"} // tamnija narandžasta
+  onMouseLeave={(e) => e.target.style.backgroundColor = "#EB5E28"}
 >
   Reset Filters
 </button>
-
       </div>
 
       <table
