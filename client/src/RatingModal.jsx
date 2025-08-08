@@ -84,10 +84,10 @@ function RatingModal({ userId, authorId, onClose }) {
         <label>Comment:</label>
         <br />
         <textarea
-          rows="3"
+          rows="2"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          style={{ width: "100%" }}
+          style={{ width: "80%" }}
         />
       </div>
 

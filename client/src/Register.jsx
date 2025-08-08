@@ -11,42 +11,43 @@ function Register() {
     role: "shipper",
   });
 
-  const [message, setMessage] = useState(null);
+  const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const res = await fetch("http://localhost:3001/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch("http://localhost:7210/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      setMessage("Registration successful! Please log in.");
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 2000);
-    } else {
-      setMessage("Error: " + data.msg);
+      if (res.ok) {
+        setMessage("✅ Registration successful! Redirecting to login...");
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      } else {
+        setMessage("❌ Error: " + (data.error || "Unknown error."));
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setMessage("❌ Error sending request. Is backend running?");
     }
-  } catch (err) {
-    setMessage("Error sending request.");
-    console.error(err);
-  }
-};
-
+  };
 
   return (
     <div style={{ padding: "40px", textAlign: "center" }}>
-      <h2>Registration</h2>
+      <h2>Register</h2>
       <form onSubmit={handleSubmit}>
         <input
           name="username"
@@ -76,21 +77,21 @@ function Register() {
         <br />
         <input
           name="name"
-          placeholder="Name"
+          placeholder="First Name"
           value={form.name}
           onChange={handleChange}
         />
         <br />
         <input
           name="surname"
-          placeholder="Surname"
+          placeholder="Last Name"
           value={form.surname}
           onChange={handleChange}
         />
         <br />
         <input
           name="phonenumber"
-          placeholder="Phone number"
+          placeholder="Phone Number"
           value={form.phonenumber}
           onChange={handleChange}
         />

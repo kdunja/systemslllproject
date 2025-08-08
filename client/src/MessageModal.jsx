@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-function MessageModal({ senderId, recipientId, onClose }) {
+function MessageModal({ recipientId, onClose }) {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([]);
 
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const senderId = currentUser?.userId;
+
   useEffect(() => {
-    fetchConversation();
+    if (senderId && recipientId) {
+      fetchConversation();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [senderId, recipientId]);
 
   const fetchConversation = async () => {
@@ -51,7 +57,7 @@ function MessageModal({ senderId, recipientId, onClose }) {
         padding: "20px",
         borderRadius: "10px",
         zIndex: 1000,
-        width: "90%",
+        width: "70%",
         maxWidth: "500px",
         maxHeight: "80vh",
         overflowY: "auto",
@@ -89,7 +95,7 @@ function MessageModal({ senderId, recipientId, onClose }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Type your message..."
-        style={{ width: "100%", marginBottom: "10px" }}
+        style={{ width: "70%", marginBottom: "10px" }}
       />
 
       <div style={{ textAlign: "right" }}>

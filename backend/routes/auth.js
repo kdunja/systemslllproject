@@ -7,6 +7,7 @@ const db = require("../db");
 // Tajna za JWT token (kasnije prebacujemo u .env)
 const JWT_SECRET = "tajna123";
 
+// Register
 router.post("/register", async (req, res) => {
   const { username, email, password, role, name, surname, phonenumber } = req.body;
 
@@ -16,18 +17,21 @@ router.post("/register", async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const sql = `INSERT INTO User (username, email, password, role, name, surname, phonenumber)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `
+      INSERT INTO User (username, email, password, role, name, surname, phonenumber)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
 
     db.query(sql, [username, email, hashedPassword, role, name, surname, phonenumber], (err, result) => {
       if (err) {
         console.error("Error:", err.message);
         return res.status(500).json({ error: "Error" });
       }
-      res.status(201).json({ message: "Succsesful registration!" });
+
+      res.status(201).json({ message: "Successful registration!" });
     });
   } catch (err) {
-    res.status(500).json({ error: "Servis error." });
+    res.status(500).json({ error: "Server error." });
   }
 });
 
@@ -54,8 +58,16 @@ router.post("/login", (req, res) => {
       { expiresIn: "2h" }
     );
 
-    res.json({ message: "Succesfull registration!", token, role: user.role, username: user.username });
+    // Izbacujemo password pre slanja
+    const { password: hashedPassword, ...safeUser } = user;
+
+    res.json({
+      message: "Login successful!",
+      token,
+      user: safeUser
+    });
   });
 });
 
 module.exports = router;
+

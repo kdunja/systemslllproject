@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-function LoadDetails({ load, onClose }) {
+function LoadDetails({ load, onClose, onEdit }) {
   const [cargoList, setCargoList] = useState([]);
 
   useEffect(() => {
@@ -24,20 +24,22 @@ function LoadDetails({ load, onClose }) {
         top: "10%",
         left: "50%",
         transform: "translateX(-50%)",
-        backgroundColor: "#1e1e1e", // tamna pozadina
-        color: "#f1f1f1", // svetao tekst
-        border: "1px solid #444",
+        backgroundColor: "#252422",
+        color: "#FFFcf2",
+        border: "1px solid #403D39",
         padding: "20px",
         zIndex: 1000,
         width: "90%",
-        maxWidth: "450px",
+        maxWidth: "500px",
         maxHeight: "80vh",
         overflowY: "auto",
         boxShadow: "0 4px 10px rgba(0,0,0,0.4)",
-        borderRadius: "12px"
+        borderRadius: "12px",
       }}
     >
-      <h3 style={{ borderBottom: "1px solid #555", paddingBottom: "5px" }}>Load Details</h3>
+      <h3 style={{ borderBottom: "1px solid #CCC5B9", paddingBottom: "5px" }}>
+        Load Details
+      </h3>
       <p><strong>ID:</strong> {load.loadassignmentId}</p>
       <p><strong>User ID:</strong> {load.userId}</p>
       <p><strong>Title:</strong> {load.title}</p>
@@ -45,10 +47,10 @@ function LoadDetails({ load, onClose }) {
       <p><strong>Status:</strong> {load.status}</p>
       <p><strong>Created At:</strong> {new Date(load.timestamp).toLocaleString()}</p>
 
-      <hr style={{ marginTop: "15px", marginBottom: "10px", borderColor: "#444" }} />
+      <hr style={{ marginTop: "15px", marginBottom: "10px", borderColor: "#CCC5B9" }} />
       <h4 style={{ marginBottom: "10px" }}>Cargo Stops</h4>
       {cargoList.length === 0 ? (
-        <p style={{ color: "#aaa" }}>No cargo stops for this load.</p>
+        <p style={{ color: "#CCC5B9" }}>No cargo stops for this load.</p>
       ) : (
         <ul style={{ paddingLeft: "18px" }}>
           {cargoList.map((cargo, index) => (
@@ -64,18 +66,20 @@ function LoadDetails({ load, onClose }) {
         </ul>
       )}
 
-      <div style={{ textAlign: "right" }}>
+      <div style={{ textAlign: "right", marginTop: "20px" }}>
+        <button
+          onClick={() => {
+            onClose();
+            onEdit(load);
+          }}
+          className="modal-button"
+        >
+          Edit
+        </button>
+
         <button
           onClick={onClose}
-          style={{
-            marginTop: "10px",
-            backgroundColor: "#333",
-            color: "#fff",
-            padding: "6px 12px",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer"
-          }}
+          className="modal-button"
         >
           Close
         </button>

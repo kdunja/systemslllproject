@@ -7,9 +7,9 @@ import RatingModal from "./RatingModal";
 import MessageModal from "./MessageModal";
 import Header from "./Header";
 
-
-
 function LoadBoard() {
+  const loggedInUser = JSON.parse(localStorage.getItem("user"));
+
   const [loads, setLoads] = useState([]);
   const [cargoData, setCargoData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,18 +21,19 @@ function LoadBoard() {
   const [pickupAfter, setPickupAfter] = useState("");
   const [deliveryBefore, setDeliveryBefore] = useState("");
 
-  const resetFilters = () => {
-  setSearchTerm("");
-  setStatusFilter("");
-  setSelectedCity("");
-  setSelectedType("");
-  setPickupAfter("");
-  setDeliveryBefore("");
-};
-
-
   const [editLoad, setEditLoad] = useState(null);
   const [selectedLoad, setSelectedLoad] = useState(null);
+  const [ratingTargetUserId, setRatingTargetUserId] = useState(null);
+  const [messageTargetUserId, setMessageTargetUserId] = useState(null);
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("");
+    setSelectedCity("");
+    setSelectedType("");
+    setPickupAfter("");
+    setDeliveryBefore("");
+  };
 
   const startEditing = (load) => setEditLoad(load);
   const cancelEditing = () => setEditLoad(null);
@@ -49,6 +50,11 @@ function LoadBoard() {
   const openDetails = (load) => setSelectedLoad(load);
   const closeDetails = () => setSelectedLoad(null);
 
+  const handleEditFromDetails = (load) => {
+    setSelectedLoad(null);
+    setEditLoad(load);
+  };
+
   useEffect(() => {
     fetchLoads();
     fetchCargo();
@@ -56,9 +62,8 @@ function LoadBoard() {
 
   const fetchLoads = async () => {
     try {
-      const res = await fetch("/api/loadassignments");
-      const data = await res.json();
-      setLoads(data);
+      const res = await axios.get("/api/loads");
+      setLoads(res.data);
       setLoading(false);
     } catch (err) {
       console.error("Error loading loads:", err);
@@ -78,7 +83,7 @@ function LoadBoard() {
 
   const handleLoadAdded = async ({ loadData, cargoStops }) => {
     try {
-      const res = await axios.post("/api/loadassignments", loadData);
+      const res = await axios.post("/api/loads", loadData);
       const loadassignmentId = res.data.loadassignmentId;
 
       for (const stop of cargoStops) {
@@ -100,16 +105,10 @@ function LoadBoard() {
     if (!window.confirm("Are you sure you want to delete this load?")) return;
 
     try {
-      const res = await fetch(`/api/loadassignments/${id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/loads/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setLoads((prev) =>
-          prev.filter((load) => load.loadassignmentId !== id)
-        );
-        setCargoData((prev) =>
-          prev.filter((cargo) => cargo.loadassignmentId !== id)
-        );
+        setLoads((prev) => prev.filter((load) => load.loadassignmentId !== id));
+        setCargoData((prev) => prev.filter((cargo) => cargo.loadassignmentId !== id));
       } else {
         const data = await res.json();
         alert("Error: " + data.msg);
@@ -156,214 +155,109 @@ function LoadBoard() {
     );
   });
 
-  const [ratingTargetUserId, setRatingTargetUserId] = useState(null);
-
-  const [messageTargetUserId, setMessageTargetUserId] = useState(null);
-
-
   if (loading) return <p>Loading loads...</p>;
 
   return (
-      <div style={{ margin: 0, padding: 0 }}>
-    <Header />
-    <div style={{ padding: "20px" }}>
+    <div style={{ margin: 0, padding: 0 }}>
+      <Header />
+      <div style={{ padding: "20px" }}>
+        <AddLoadForm onLoadAdded={handleLoadAdded} />
 
-      <AddLoadForm onLoadAdded={handleLoadAdded} />
-
-      <div
-  style={{
-    backgroundColor: "rgba(37, 36, 34, 0.8)", // 252422 sa providnošću
-    padding: "20px",
-    borderRadius: "12px",
-    marginBottom: "20px",
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "12px",
-    justifyContent: "space-between"
-  }}
->
-        <input
-          type="text"
-          placeholder="Search by title or description"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: "5px", width: "180px" }}
-        />
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: "5px", width: "120px" }}
-        >
-          <option value="">All statuses</option>
-          <option value="open">Open</option>
-          <option value="in-progress">In Progress</option>
-          <option value="closed">Closed</option>
-        </select>
-
-        <select
-          value={selectedCity}
-          onChange={(e) => setSelectedCity(e.target.value)}
-          style={{ padding: "5px", width: "120px" }}
-        >
-          <option value="">All cities</option>
-          {[...new Set(cargoData.map((c) => c.destination))].map((city) => (
-            <option key={city} value={city}>{city}</option>
-          ))}
-        </select>
-
-        <select
-          value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
-          style={{ padding: "5px", width: "120px" }}
-        >
-          <option value="">All types</option>
-          {[...new Set(cargoData.map((c) => c.cargotype))].map((type) => (
-            <option key={type} value={type}>{type}</option>
-          ))}
-        </select>
-
-        <input
-          type="datetime-local"
-          value={pickupAfter}
-          onChange={(e) => setPickupAfter(e.target.value)}
-          style={{ padding: "5px", width: "120px" }}
-        />
-
-        <input
-          type="datetime-local"
-          value={deliveryBefore}
-          onChange={(e) => setDeliveryBefore(e.target.value)}
-          style={{ padding: "5px", width: "120px" }}
-        />
-
-        <button
-  onClick={resetFilters}
-  style={{
-    padding: "10px 16px",
-    backgroundColor: "#EB5E28", // narandžasta iz palete
-    color: "#FFFcf2",
-    border: "none",
-    borderRadius: "6px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    transition: "background-color 0.3s ease"
-  }}
-  onMouseEnter={(e) => e.target.style.backgroundColor = "#cc4d1e"} // tamnija narandžasta
-  onMouseLeave={(e) => e.target.style.backgroundColor = "#EB5E28"}
->
-  Reset Filters
-</button>
-      </div>
-
-      <table
-        border="1"
-        cellPadding="5"
-        style={{ width: "100%", borderCollapse: "collapse" }}
-      >
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>User ID</th>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th style={{ minWidth: "130px", textAlign: "center" }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredLoads.map((load) => (
-            <tr
-              key={load.loadassignmentId}
-              onClick={() => openDetails(load)}
-              style={{ cursor: "pointer" }}
-            >
-              <td>{load.loadassignmentId}</td>
-              <td>{load.userId}</td>
-              <td>{load.title}</td>
-              <td>{load.description}</td>
-              <td>{load.status}</td>
-              <td>{new Date(load.timestamp).toLocaleString()}</td>
-              <td style={{ minWidth: "130px", textAlign: "center" }}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(load.loadassignmentId);
-                  }}
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startEditing(load);
-                  }}
-                  style={{ marginLeft: "10px" }}
-                >
-                  Edit
-                </button>
-                <button
-  onClick={(e) => {
-    e.stopPropagation();
-    setRatingTargetUserId(load.userId);
-  }}
-  style={{ marginLeft: "10px" }}
->
-  Rate
-</button>
-
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    setMessageTargetUserId(load.userId);
-  }}
-  style={{ marginLeft: "10px" }}
->
-  Message
-</button>
-
-
-              </td>
+        <table border="1" cellPadding="5" style={{ width: "85%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>User ID</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th style={{ minWidth: "130px", textAlign: "center" }}>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredLoads.map((load) => (
+              <tr
+                key={load.loadassignmentId}
+                onClick={() => openDetails(load)}
+                style={{ cursor: "pointer" }}
+              >
+                <td>{load.loadassignmentId}</td>
+                <td>{load.userId}</td>
+                <td>{load.title}</td>
+                <td>{load.description}</td>
+                <td>{load.status}</td>
+                <td>{new Date(load.timestamp).toLocaleString()}</td>
+                <td style={{ minWidth: "130px", textAlign: "center" }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(load.loadassignmentId);
+                    }}
+                    className="action-button delete"
+                  >
+                    Delete
+                  </button>
+                  {loggedInUser && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRatingTargetUserId(load.userId);
+                      }}
+                      className="action-button"
+                    >
+                      Rate
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMessageTargetUserId(load.userId);
+                    }}
+                    className="action-button"
+                  >
+                    Message
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {editLoad && (
-        <EditLoadForm
-          load={editLoad}
-          onCancel={cancelEditing}
-          onUpdate={updateLoadInList}
-        />
-      )}
+        {editLoad && (
+          <EditLoadForm
+            load={editLoad}
+            onCancel={cancelEditing}
+            onUpdate={updateLoadInList}
+          />
+        )}
 
-      {selectedLoad && (
-        <LoadDetails load={selectedLoad} onClose={closeDetails} />
-      )}
-      {ratingTargetUserId && (
-  <RatingModal
-    userId={ratingTargetUserId}
-    authorId={1} // TODO: replace with logged-in user ID when login system is active
-    onClose={() => setRatingTargetUserId(null)}
-  />
-)}
+        {selectedLoad && (
+          <LoadDetails
+            load={selectedLoad}
+            onClose={closeDetails}
+            onEdit={handleEditFromDetails}
+          />
+        )}
 
-{messageTargetUserId && (
-  <MessageModal
-    senderId={1} // TODO: zameniti kad se login implementira
-    recipientId={messageTargetUserId}
-    onClose={() => setMessageTargetUserId(null)}
-  />
-)}
+        {ratingTargetUserId && (
+          <RatingModal
+            userId={ratingTargetUserId}
+            authorId={loggedInUser?.userId}
+            onClose={() => setRatingTargetUserId(null)}
+          />
+        )}
 
-
-    </div>
+        {messageTargetUserId && (
+          <MessageModal
+            senderId={loggedInUser?.userId || 1}
+            recipientId={messageTargetUserId}
+            onClose={() => setMessageTargetUserId(null)}
+          />
+        )}
+      </div>
     </div>
   );
 }
 
 export default LoadBoard;
-
-
-

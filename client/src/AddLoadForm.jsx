@@ -11,9 +11,12 @@ function AddLoadForm({ onLoadAdded }) {
       cargotype: "",
       cargoweight: "",
       pickuptime: "",
-      delieverytime: ""
-    }
+      delieverytime: "", 
+    },
   ]);
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.userId;
 
   const handleAddStop = () => {
     setCargoStops([
@@ -23,8 +26,8 @@ function AddLoadForm({ onLoadAdded }) {
         cargotype: "",
         cargoweight: "",
         pickuptime: "",
-        delieverytime: ""
-      }
+        delieverytime: "", 
+      },
     ]);
   };
 
@@ -37,11 +40,16 @@ function AddLoadForm({ onLoadAdded }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (!userId) {
+      alert("User not logged in!");
+      return;
+    }
+
     const loadData = {
       title,
       description,
       status,
-      userId: 1
+      userId,
     };
 
     onLoadAdded({ loadData, cargoStops });
@@ -56,8 +64,8 @@ function AddLoadForm({ onLoadAdded }) {
         cargotype: "",
         cargoweight: "",
         pickuptime: "",
-        delieverytime: ""
-      }
+        delieverytime: "",
+      },
     ]);
   };
 
@@ -69,12 +77,11 @@ function AddLoadForm({ onLoadAdded }) {
           justifyContent: "center",
           alignItems: "flex-start",
           gap: "80px",
-          flexWrap: "wrap"
+          flexWrap: "wrap",
         }}
       >
         {/* LEVA STRANA – ADD LOAD */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          
           <h3 className="section-title">Add Load</h3>
           <input
             type="text"
@@ -111,14 +118,16 @@ function AddLoadForm({ onLoadAdded }) {
               style={{
                 display: "flex",
                 flexWrap: "wrap",
-                gap: "10px"
+                gap: "10px",
               }}
             >
               <input
                 type="text"
                 placeholder="Destination"
                 value={stop.destination}
-                onChange={(e) => handleCargoChange(index, "destination", e.target.value)}
+                onChange={(e) =>
+                  handleCargoChange(index, "destination", e.target.value)
+                }
                 required
                 style={{ width: "100px" }}
               />
@@ -126,7 +135,9 @@ function AddLoadForm({ onLoadAdded }) {
                 type="text"
                 placeholder="Type"
                 value={stop.cargotype}
-                onChange={(e) => handleCargoChange(index, "cargotype", e.target.value)}
+                onChange={(e) =>
+                  handleCargoChange(index, "cargotype", e.target.value)
+                }
                 required
                 style={{ width: "100px" }}
               />
@@ -134,33 +145,40 @@ function AddLoadForm({ onLoadAdded }) {
                 type="number"
                 placeholder="Weight (kg)"
                 value={stop.cargoweight}
-                onChange={(e) => handleCargoChange(index, "cargoweight", e.target.value)}
+                onChange={(e) =>
+                  handleCargoChange(index, "cargoweight", e.target.value)
+                }
                 required
                 style={{ width: "100px" }}
               />
               <input
                 type="datetime-local"
                 value={stop.pickuptime}
-                onChange={(e) => handleCargoChange(index, "pickuptime", e.target.value)}
+                onChange={(e) =>
+                  handleCargoChange(index, "pickuptime", e.target.value)
+                }
                 required
                 style={{ width: "120px" }}
               />
               <input
                 type="datetime-local"
                 value={stop.delieverytime}
-                onChange={(e) => handleCargoChange(index, "delieverytime", e.target.value)}
+                onChange={(e) =>
+                  handleCargoChange(index, "delieverytime", e.target.value)
+                }
                 required
                 style={{ width: "120px" }}
               />
             </div>
           ))}
 
-          <button type="button" onClick={handleAddStop}>+ Add Stop</button>
+          <button type="button" onClick={handleAddStop}>
+            + Add Stop
+          </button>
         </div>
       </div>
 
-      {/* SUBMIT button below both sections, centered */}
-      <div style={{marginTop: "20px", marginLeft: "80px" }}>
+      <div style={{ marginTop: "20px", marginLeft: "550px" }}>
         <button type="submit">Add Load</button>
       </div>
     </form>
@@ -168,4 +186,3 @@ function AddLoadForm({ onLoadAdded }) {
 }
 
 export default AddLoadForm;
-
