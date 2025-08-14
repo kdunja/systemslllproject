@@ -44,7 +44,7 @@ router.post("/register", (req, res) => {
     try { hash = bcrypt.hashSync(String(password), SALT_ROUNDS); }
     catch { return fail(res, 500, "Internal server error."); }
 
-    const sql = "INSERT INTO `user` (username, email, password, role, name, surname, phonenumber, is_active) VALUES (?,?,?,?,?,?,?,1)";
+    const sql = "INSERT INTO `user` (username, email, password, role, name, surname, phonenumber) VALUES (?,?,?,?,?,?,?)";
     const params = [uname, mail, hash, safeRole, String(name || "").trim(), String(surname || "").trim(), String(phonenumber || "").trim()];
     db.query(sql, params, (insErr, result) => {
       if (insErr) return fail(res, 500, "Internal server error.");
