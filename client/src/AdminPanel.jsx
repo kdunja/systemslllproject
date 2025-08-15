@@ -18,7 +18,8 @@ function AdminPanel() {
   const fetchUsers = async () => {
     try {
       const res = await axios.get("/admin/users");
-      setUsers(res.data);
+      const rows = res.data?.data || [];
+      setUsers(rows);
     } catch {}
   };
 
@@ -57,7 +58,8 @@ function AdminPanel() {
   const fetchLoads = async () => {
     try {
       const res = await axios.get("/admin/loads");
-      setLoads(res.data);
+      const rows = res.data?.data || [];
+      setLoads(rows);
     } catch {}
   };
 
@@ -75,7 +77,8 @@ function AdminPanel() {
     try {
       const query = ratingsUserFilter ? `?userId=${encodeURIComponent(ratingsUserFilter)}` : "";
       const res = await axios.get(`/admin/ratings${query}`);
-      setRatings(res.data);
+      const rows = res.data?.data || [];
+      setRatings(rows);
     } catch {}
   };
 
@@ -93,7 +96,8 @@ function AdminPanel() {
     try {
       const query = messagesUserFilter ? `?userId=${encodeURIComponent(messagesUserFilter)}` : "";
       const res = await axios.get(`/admin/messages${query}`);
-      setMessages(res.data);
+      const rows = res.data?.data || [];
+      setMessages(rows);
     } catch {}
   };
 
@@ -110,7 +114,8 @@ function AdminPanel() {
   const fetchStats = async () => {
     try {
       const res = await axios.get("/admin/stats");
-      setStats(res.data);
+      const s = res.data?.data || null;
+      setStats(s);
     } catch {}
   };
 

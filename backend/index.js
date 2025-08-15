@@ -8,11 +8,13 @@ app.disable("x-powered-by");
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-app.use("/", require("./routes/auth"));        // /login, /register, /me
-app.use("/loads", require("./routes/load"));   // /loads, /loads/:id, ...
-app.use("/", require("./routes/cargo"));       // /cargo, /cargo/all, ...
-app.use("/", require("./routes/messages"));    // /messages, /messages/:userId, ...
-app.use("/", require("./routes/ratings"));     // /ratings, /ratings/average/:userId, ...
+app.use("/", require("./routes/auth"));        
+app.use("/loads", require("./routes/load"));   
+app.use("/", require("./routes/cargo"));       
+app.use("/", require("./routes/message"));    
+app.use("/", require("./routes/rating"));     
+app.use("/admin", require("./routes/admin"));
+
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 

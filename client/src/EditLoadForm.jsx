@@ -1,63 +1,106 @@
 import React, { useEffect, useState } from "react";
 import axios from "./axios";
 
-function EditLoadForm({ load, onCancel, onUpdate }) {
-  const [form, setForm] = useState({
-    title: load.title || "",
-    description: load.description || "",
-    status: load.status || "open",
-  });
-
-  const [cargoList, setCargoList] = useState([]);
-  const [cargoEdits, setCargoEdits] = useState({});
+export default function EditLoadForm({ load, onCancel, onUpdate }) {
+  const [title, setTitle] = useState(load.title || "");
+  const [description, setDescription] = useState(load.description || "");
+  const [status, setStatus] = useState(load.status || "pending");
+  const [stops, setStops] = useState([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const fetchCargo = async () => {
+    setTitle(load.title || "");
+    setDescription(load.description || "");
+    setStatus(load.status || "pending");
+  }, [load]);
+
+  useEffect(() => {
+    const fetchStops = async () => {
       try {
-        const res = await axios.get(`/cargo/${load.loadassignmentId}`);
-        const data = Array.isArray(res.data.data) ? res.data.data : [];
-        setCargoList(data);
-        const editState = {};
-        data.forEach((cargo) => {
-          editState[cargo.cargoId] = {
-            destination: cargo.destination,
-            cargotype: cargo.cargotype,
-            cargoweight: cargo.cargoweight,
-            pickuptime: cargo.pickuptime,
-            delieverytime: cargo.delieverytime,
-          };
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`/cargo/by-load/${load.loadassignmentId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          validateStatus: () => true,
         });
-        setCargoEdits(editState);
-      } catch {}
+        const data = Array.isArray(res.data?.data) ? res.data.data : [];
+        setStops(data.map(toEditableStop));
+      } catch (e) {
+        console.error("GET /cargo/by-load failed:", e);
+      }
     };
-    fetchCargo();
+    fetchStops();
   }, [load.loadassignmentId]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const toEditableStop = (c) => ({
+    cargoId: c.cargoId ?? null,
+    destination: c.destination || "",
+    cargotype: c.cargotype || "",
+    cargoweight: c.cargoweight ?? "",
+    pickuptime: toLocalInput(c.pickuptime),
+    delieverytime: toLocalInput(c.delieverytime),
+  });
 
-  const handleCargoChange = (cargoId, e) => {
-    const { name, value } = e.target;
-    setCargoEdits((prev) => ({
+  function toLocalInput(dt) {
+    if (!dt) return "";
+    const d = new Date(dt);
+    if (Number.isNaN(d.getTime())) return "";
+    const p = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  const fromLocalInput = (s) => (s ? new Date(s) : null);
+
+  const addStop = () =>
+    setStops((prev) => [
       ...prev,
-      [cargoId]: { ...prev[cargoId], [name]: value },
-    }));
-  };
+      { cargoId: null, destination: "", cargotype: "", cargoweight: "", pickuptime: "", delieverytime: "" },
+    ]);
 
-  const handleSubmit = async (e) => {
+  const removeStop = (idx) => setStops((prev) => prev.filter((_, i) => i !== idx));
+
+  const changeStop = (idx, field, value) =>
+    setStops((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
+
+  const save = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
-      await axios.put(`/loads/${load.loadassignmentId}`, form);
-      for (const cargoId of Object.keys(cargoEdits)) {
-        await axios.put(`/cargo/${cargoId}`, cargoEdits[cargoId]);
-      }
-      alert("Load and cargo updated successfully.");
-      onUpdate({ ...load, ...form });
-    } catch {
-      alert("Failed to update. Please try again.");
+      const token = localStorage.getItem("token");
+
+      // 1) update load base fields
+      const baseRes = await axios.put(
+        `/loads/${load.loadassignmentId}`,
+        { title, description, status },
+        { headers: { Authorization: `Bearer ${token}` }, validateStatus: () => true }
+      );
+      if (!baseRes.data?.ok) throw new Error(baseRes.data?.error || "Failed to update load.");
+
+      // 2) bulk replace cargo stops (single payload)
+      const payload = {
+        items: stops.map((s) => ({
+          destination: s.destination,
+          cargotype: s.cargotype,
+          cargoweight: Number(s.cargoweight) || 0,
+          pickuptime: fromLocalInput(s.pickuptime),
+          delieverytime: fromLocalInput(s.delieverytime),
+        })),
+      };
+      const cargoRes = await axios.put(
+        `/cargo/bulk/${load.loadassignmentId}`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` }, validateStatus: () => true }
+      );
+      if (!cargoRes.data?.ok) throw new Error(cargoRes.data?.error || "Failed to update cargo.");
+
+      onUpdate({ ...load, title, description, status });
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Save failed. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
+
+  const inputStyle = { width: "70%", marginBottom: 10, padding: 6 };
 
   return (
     <div
@@ -69,102 +112,119 @@ function EditLoadForm({ load, onCancel, onUpdate }) {
         backgroundColor: "#252422",
         color: "#FFFcf2",
         border: "1px solid #403D39",
-        padding: "20px",
+        padding: 20,
         zIndex: 1000,
-        width: "90%",
-        maxWidth: "500px",
+        width: "92%",
+        maxWidth: 740,
         maxHeight: "80vh",
         overflowY: "auto",
         boxShadow: "0 4px 10px rgba(0,0,0,0.4)",
-        borderRadius: "12px",
+        borderRadius: 12,
       }}
     >
-      <form onSubmit={handleSubmit}>
-        <h3>Edit Load</h3>
+      <form onSubmit={save}>
+        <h3 style={{ marginTop: 0 }}>Edit Load</h3>
+
         <input
-          name="title"
-          value={form.title}
-          onChange={handleChange}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="Title"
           required
-          style={{ width: "70%", marginBottom: "10px", padding: "5px" }}
+          style={inputStyle}
         />
         <input
-          name="description"
-          value={form.description}
-          onChange={handleChange}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Description"
           required
-          style={{ width: "70%", marginBottom: "10px", padding: "5px" }}
+          style={inputStyle}
         />
         <select
-          name="status"
-          value={form.status}
-          onChange={handleChange}
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
           required
-          style={{ width: "70%", marginBottom: "20px", padding: "5px" }}
+          style={{ ...inputStyle, marginBottom: 20 }}
         >
-          <option value="open">Open</option>
-          <option value="in-progress">In Progress</option>
+          <option value="pending">Open</option>
+          <option value="in_progress">In Progress</option>
           <option value="completed">Completed</option>
+          <option value="canceled">Canceled</option>
         </select>
 
-        <h4>Cargo Stops</h4>
-        {cargoList.map((cargo) => (
+        <h4 style={{ margin: "0 0 10px" }}>Cargo Stops</h4>
+
+        {stops.map((s, idx) => (
           <div
-            key={cargo.cargoId}
+            key={idx}
             style={{
-              marginBottom: "15px",
-              padding: "10px",
+              marginBottom: 14,
+              padding: 12,
               border: "1px solid #CCC5B9",
-              borderRadius: "6px",
+              borderRadius: 8,
+              background: "rgba(0,0,0,0.15)",
             }}
           >
             <input
-              name="destination"
-              value={cargoEdits[cargo.cargoId]?.destination || ""}
-              onChange={(e) => handleCargoChange(cargo.cargoId, e)}
               placeholder="Destination"
+              value={s.destination}
+              onChange={(e) => changeStop(idx, "destination", e.target.value)}
+              style={inputStyle}
               required
-              style={{ width: "70%", marginBottom: "5px", padding: "5px" }}
             />
             <input
-              name="cargotype"
-              value={cargoEdits[cargo.cargoId]?.cargotype || ""}
-              onChange={(e) => handleCargoChange(cargo.cargoId, e)}
               placeholder="Type"
+              value={s.cargotype}
+              onChange={(e) => changeStop(idx, "cargotype", e.target.value)}
+              style={inputStyle}
               required
-              style={{ width: "70%", marginBottom: "5px", padding: "5px" }}
             />
             <input
-              name="cargoweight"
               type="number"
-              value={cargoEdits[cargo.cargoId]?.cargoweight || ""}
-              onChange={(e) => handleCargoChange(cargo.cargoId, e)}
-              placeholder="Weight"
+              placeholder="Weight (kg)"
+              value={s.cargoweight}
+              onChange={(e) => changeStop(idx, "cargoweight", e.target.value)}
+              style={inputStyle}
               required
-              style={{ width: "70%", marginBottom: "5px", padding: "5px" }}
             />
             <input
-              name="pickuptime"
               type="datetime-local"
-              value={cargoEdits[cargo.cargoId]?.pickuptime?.slice(0, 16) || ""}
-              onChange={(e) => handleCargoChange(cargo.cargoId, e)}
+              value={s.pickuptime}
+              onChange={(e) => changeStop(idx, "pickuptime", e.target.value)}
+              style={inputStyle}
               required
-              style={{ width: "70%", marginBottom: "5px", padding: "5px" }}
             />
             <input
-              name="delieverytime"
               type="datetime-local"
-              value={cargoEdits[cargo.cargoId]?.delieverytime?.slice(0, 16) || ""}
-              onChange={(e) => handleCargoChange(cargo.cargoId, e)}
+              value={s.delieverytime}
+              onChange={(e) => changeStop(idx, "delieverytime", e.target.value)}
+              style={inputStyle}
               required
-              style={{ width: "70%", padding: "5px" }}
             />
+            <div style={{ textAlign: "right" }}>
+              <button
+                type="button"
+                className="action-button delete"
+                onClick={() => removeStop(idx)}
+                style={{ padding: "6px 10px" }}
+              >
+                Remove stop
+              </button>
+            </div>
           </div>
         ))}
 
-        <div style={{ textAlign: "right", marginTop: "10px" }}>
+        <div style={{ marginBottom: 12 }}>
+          <button
+            type="button"
+            className="action-button"
+            onClick={addStop}
+            style={{ padding: "8px 12px" }}
+          >
+            + Add stop
+          </button>
+        </div>
+
+        <div style={{ textAlign: "right" }}>
           <button
             type="submit"
             style={{
@@ -172,22 +232,23 @@ function EditLoadForm({ load, onCancel, onUpdate }) {
               color: "#FFFcf2",
               padding: "8px 14px",
               border: "none",
-              borderRadius: "6px",
+              borderRadius: 6,
               cursor: "pointer",
             }}
+            disabled={saving}
           >
-            Save
+            {saving ? "Saving..." : "Save"}
           </button>
           <button
             type="button"
             onClick={onCancel}
             style={{
-              marginLeft: "10px",
+              marginLeft: 10,
               backgroundColor: "#403D39",
               color: "#FFFcf2",
               padding: "8px 14px",
               border: "none",
-              borderRadius: "6px",
+              borderRadius: 6,
               cursor: "pointer",
             }}
           >
@@ -198,5 +259,3 @@ function EditLoadForm({ load, onCancel, onUpdate }) {
     </div>
   );
 }
-
-export default EditLoadForm;

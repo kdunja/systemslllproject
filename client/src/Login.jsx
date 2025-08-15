@@ -28,6 +28,11 @@ function Login() {
 
   return (
     <div style={{ padding: 40, textAlign: "center" }}>
+      {/* Dodati glavni naslov */}
+      <h1 style={{ color: "#ffffff", marginBottom: "20px", textShadow: "1px 1px 3px rgba(0,0,0,0.6)" }}>
+        Welcome to Trucking and Shipping App
+      </h1>
+
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
         <input
@@ -57,7 +62,7 @@ function Login() {
         </p>
       )}
 
-       <p style={{ marginTop: "15px" }}>
+      <p style={{ marginTop: "15px" }}>
         No account?{" "}
         <Link to="/register" style={{ color: "#EB5E28", textDecoration: "underline" }}>
           Register here

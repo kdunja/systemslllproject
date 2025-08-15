@@ -27,16 +27,23 @@ function normalizeStatus(s) {
 router.post("/", (req, res) => {
   const { userId, title, status, description } = req.body || {};
   if (!userId || !title) return fail(res, 400, "Fields 'userId' and 'title' are required.");
+
   const sql = `
-    INSERT INTO loadassignment (userId, title, status, description)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO loadassignment (userId, title, status, description, \`timestamp\`)
+    VALUES (?, ?, ?, ?, NOW())
   `;
   const safeStatus = normalizeStatus(status);
-  db.query(sql, [toInt(userId), String(title).trim(), safeStatus, String(description || "").trim()], (err, result) => {
-    if (err) return fail(res, 500, "Server error while adding load.");
-    return ok(res, { message: "Load created.", loadassignmentId: result.insertId }, 201);
-  });
+
+  db.query(
+    sql,
+    [toInt(userId), String(title).trim(), safeStatus, String(description || "").trim()],
+    (err, result) => {
+      if (err) return fail(res, 500, "Server error while adding load.");
+      return ok(res, { message: "Load created.", loadassignmentId: result.insertId }, 201);
+    }
+  );
 });
+
 
 router.get("/", (req, res) => {
   const { status, userId, title, q, limit: rawLimit, offset: rawOffset, sort: rawSort, dir: rawDir } = req.query || {};

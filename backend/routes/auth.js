@@ -67,8 +67,10 @@ router.post("/login", (req, res) => {
 
     let valid = false;
     try {
-      valid = bcrypt.compareSync(String(password), user.password);
-      if (!valid && user.password === password) {
+      if (typeof user.password === "string" && user.password.startsWith("$2")) {
+        valid = bcrypt.compareSync(String(password), user.password);
+      }
+      if (!valid && String(user.password) === String(password)) {
         valid = true;
         const newHash = bcrypt.hashSync(String(password), SALT_ROUNDS);
         db.query("UPDATE `user` SET password = ? WHERE userId = ?", [newHash, user.userId], () => {});
@@ -79,7 +81,7 @@ router.post("/login", (req, res) => {
 
     if (!valid) return fail(res, 401, "Invalid password.");
 
-    const token = jwt.sign({ userId: user.userId, role: user.role }, JWT_SECRET, { expiresIn: "2h" });
+    const token = jwt.sign({ userId: user.userId, role: user.role }, JWT_SECRET || "dev_secret", { expiresIn: "2h" });
     const { password: _omit, ...safeUser } = user;
     return ok(res, { message: "Login successful.", token, user: safeUser });
   });
@@ -90,7 +92,7 @@ function requireAuth(req, res, next) {
   const m = hdr.match(/^Bearer\s+(.+)$/i);
   if (!m) return fail(res, 401, "Missing Authorization: Bearer <token> header.");
   try {
-    req.auth = jwt.verify(m[1], JWT_SECRET);
+    req.auth = jwt.verify(m[1], JWT_SECRET || "dev_secret");
     return next();
   } catch {
     return fail(res, 401, "Invalid or expired token.");
