@@ -6,17 +6,23 @@ function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
     try {
-      const res = await axios.post("/login", form, { validateStatus: () => true });
+      
+      const res = await axios.post("/auth/login", form, {
+  validateStatus: () => true,
+});
+
       if (res.status === 200) {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
         setMessage("Login successful. Redirecting to loads…");
+
         setTimeout(() => window.location.replace("/loadboard"), 600);
       } else {
         setMessage(res.data?.error || "Invalid credentials.");
@@ -28,8 +34,13 @@ function Login() {
 
   return (
     <div style={{ padding: 40, textAlign: "center" }}>
-      {/* Dodati glavni naslov */}
-      <h1 style={{ color: "#ffffff", marginBottom: "20px", textShadow: "1px 1px 3px rgba(0,0,0,0.6)" }}>
+      <h1
+        style={{
+          color: "#ffffff",
+          marginBottom: "20px",
+          textShadow: "1px 1px 3px rgba(0,0,0,0.6)",
+        }}
+      >
         Welcome to Trucking and Shipping App
       </h1>
 
@@ -52,19 +63,27 @@ function Login() {
           onChange={handleChange}
           required
         />
-        <br /><br />
+        <br />
+        <br />
         <button type="submit">Login</button>
       </form>
 
       {message && (
-        <p style={{ color: message.toLowerCase().includes("success") ? "green" : "red" }}>
+        <p
+          style={{
+            color: message.toLowerCase().includes("success") ? "green" : "red",
+          }}
+        >
           {message}
         </p>
       )}
 
       <p style={{ marginTop: "15px" }}>
         No account?{" "}
-        <Link to="/register" style={{ color: "#EB5E28", textDecoration: "underline" }}>
+        <Link
+          to="/register"
+          style={{ color: "#EB5E28", textDecoration: "underline" }}
+        >
           Register here
         </Link>
       </p>
@@ -73,3 +92,4 @@ function Login() {
 }
 
 export default Login;
+

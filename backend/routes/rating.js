@@ -13,7 +13,8 @@ function toInt(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-router.post("/ratings", (req, res) => {
+// Add a rating
+router.post("/", (req, res) => {
   const { userId, authorId, stars, comment } = req.body || {};
   const uId = toInt(userId);
   const aId = toInt(authorId);
@@ -35,7 +36,8 @@ router.post("/ratings", (req, res) => {
   });
 });
 
-router.get("/ratings/:userId", (req, res) => {
+// Get ratings for a user
+router.get("/:userId", (req, res) => {
   const userId = toInt(req.params.userId);
   if (!userId) return fail(res, 400, "Invalid 'userId'.");
 
@@ -55,7 +57,8 @@ router.get("/ratings/:userId", (req, res) => {
   });
 });
 
-router.get("/ratings/average/:userId", (req, res) => {
+// Get average rating for a user
+router.get("/average/:userId", (req, res) => {
   const userId = toInt(req.params.userId);
   if (!userId) return fail(res, 400, "Invalid 'userId'.");
 
@@ -68,7 +71,8 @@ router.get("/ratings/average/:userId", (req, res) => {
   });
 });
 
-router.delete("/ratings/:id", (req, res) => {
+// Delete rating by ID
+router.delete("/:id", (req, res) => {
   const id = toInt(req.params.id);
   if (!id) return fail(res, 400, "Invalid 'id'.");
   db.query("DELETE FROM rating WHERE ratingId = ?", [id], (err, result) => {

@@ -25,7 +25,7 @@ function toMySQLDateTime(input) {
 }
 
 /* --------------------------- CREATE ONE CARGO --------------------------- */
-router.post("/cargo", (req, res) => {
+router.post("/", (req, res) => {
   const { loadassignmentId, destination, cargotype, cargoweight, pickuptime, delieverytime } = req.body || {};
   const loadId = toInt(loadassignmentId);
   if (!loadId || !destination || !cargotype) return fail(res, 400, "Fields 'loadassignmentId', 'destination', and 'cargotype' are required.");
@@ -45,7 +45,7 @@ router.post("/cargo", (req, res) => {
 });
 
 /* ------------------------------ LIST CARGO ------------------------------ */
-router.get("/cargo", (req, res) => {
+router.get("/", (req, res) => {
   const loadId = req.query.loadId ? toInt(req.query.loadId) : null;
   const sql = loadId ? "SELECT * FROM cargo WHERE loadassignmentId = ?" : "SELECT * FROM cargo ORDER BY cargoId DESC";
   const params = loadId ? [loadId] : [];
@@ -55,7 +55,7 @@ router.get("/cargo", (req, res) => {
   });
 });
 
-router.get("/cargo/all", (req, res) => {
+router.get("/all", (req, res) => {
   db.query("SELECT * FROM cargo ORDER BY cargoId DESC", (err, rows) => {
     if (err) return fail(res, 500, "Server error while fetching cargo.");
     return ok(res, { data: rows });
@@ -105,7 +105,7 @@ router.put("/bulk/:loadassignmentId", (req, res) => {
 });
 
 /* ----------------------------- UPDATE ONE ------------------------------- */
-router.put("/cargo/:id", (req, res) => {
+router.put("/:id", (req, res) => {
   const id = toInt(req.params.id);
   if (!id) return fail(res, 400, "Invalid cargoId.");
   const { destination, cargotype, cargoweight, pickuptime, delieverytime } = req.body || {};
@@ -123,7 +123,7 @@ router.put("/cargo/:id", (req, res) => {
 });
 
 /* ----------------------------- DELETE ONE ------------------------------- */
-router.delete("/cargo/:id", (req, res) => {
+router.delete("/:id", (req, res) => {
   const id = toInt(req.params.id);
   if (!id) return fail(res, 400, "Invalid cargoId.");
   db.query("DELETE FROM cargo WHERE cargoId = ?", [id], (err, result) => {
@@ -133,16 +133,6 @@ router.delete("/cargo/:id", (req, res) => {
   });
 });
 
-/* ----------------------- FRONTEND-COMPATIBLE ALIASES -------------------- */
-/* Allow FE to call /cargo/by-load/:id and /cargo/bulk/:id */
-router.get("/cargo/by-load/:loadassignmentId", (req, res, next) => {
-  req.url = `/by-load/${req.params.loadassignmentId}`;
-  return router.handle(req, res, next);
-});
-router.put("/cargo/bulk/:loadassignmentId", (req, res, next) => {
-  req.url = `/bulk/${req.params.loadassignmentId}`;
-  return router.handle(req, res, next);
-});
-
 module.exports = router;
+
 

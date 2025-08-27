@@ -10,7 +10,7 @@ function RatingModal({ userId, authorId, onClose }) {
   useEffect(() => {
     const fetchRatings = async () => {
       try {
-        const res = await axios.get(`/ratings/${userId}`, { validateStatus: () => true });
+        const res = await axios.get(`/rating/${userId}`, { validateStatus: () => true });
         const list = Array.isArray(res.data?.data)
           ? res.data.data
           : Array.isArray(res.data)
@@ -32,7 +32,7 @@ function RatingModal({ userId, authorId, onClose }) {
     const s = Math.max(1, Math.min(5, Number(stars) || 1));
     try {
       const res = await axios.post(
-        "/ratings",
+        "/rating",
         { userId, authorId, stars: s, comment },
         { validateStatus: () => true }
       );

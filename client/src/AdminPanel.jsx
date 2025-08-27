@@ -76,7 +76,7 @@ function AdminPanel() {
   const fetchRatings = async () => {
     try {
       const query = ratingsUserFilter ? `?userId=${encodeURIComponent(ratingsUserFilter)}` : "";
-      const res = await axios.get(`/admin/ratings${query}`);
+      const res = await axios.get(`/admin/rating${query}`);
       const rows = res.data?.data || [];
       setRatings(rows);
     } catch {}
@@ -85,7 +85,7 @@ function AdminPanel() {
   const handleDeleteRating = async (ratingId) => {
     if (!window.confirm("Delete this rating?")) return;
     try {
-      await axios.delete(`/admin/ratings/${ratingId}`);
+      await axios.delete(`/admin/rating/${ratingId}`);
       setRatings((prev) => prev.filter((r) => r.ratingId !== ratingId));
     } catch {
       alert("Failed to delete rating.");
@@ -95,7 +95,7 @@ function AdminPanel() {
   const fetchMessages = async () => {
     try {
       const query = messagesUserFilter ? `?userId=${encodeURIComponent(messagesUserFilter)}` : "";
-      const res = await axios.get(`/admin/messages${query}`);
+      const res = await axios.get(`/admin/message${query}`);
       const rows = res.data?.data || [];
       setMessages(rows);
     } catch {}
@@ -104,7 +104,7 @@ function AdminPanel() {
   const handleDeleteMessage = async (messageId) => {
     if (!window.confirm("Delete this message?")) return;
     try {
-      await axios.delete(`/admin/messages/${messageId}`);
+      await axios.delete(`/admin/message/${messageId}`);
       setMessages((prev) => prev.filter((m) => m.messageId !== messageId));
     } catch {
       alert("Failed to delete message.");

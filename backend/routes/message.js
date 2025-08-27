@@ -13,7 +13,8 @@ function toInt(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-router.post("/messages", (req, res) => {
+// Create message
+router.post("/", (req, res) => {
   const { senderId, recipientId, text } = req.body || {};
   const sId = toInt(senderId);
   const rId = toInt(recipientId);
@@ -31,7 +32,8 @@ router.post("/messages", (req, res) => {
   });
 });
 
-router.get("/messages/:userId", (req, res) => {
+// List messages for a user (inbox|sent|all via ?box=)
+router.get("/:userId", (req, res) => {
   const userId = toInt(req.params.userId);
   if (!userId) return fail(res, 400, "Invalid 'userId'.");
 
@@ -62,7 +64,8 @@ router.get("/messages/:userId", (req, res) => {
   });
 });
 
-router.get("/messages/conversation/:user1/:user2", (req, res) => {
+// Get conversation between two users
+router.get("/conversation/:user1/:user2", (req, res) => {
   const u1 = toInt(req.params.user1);
   const u2 = toInt(req.params.user2);
   if (!u1 || !u2) return fail(res, 400, "Invalid user ids.");
@@ -84,7 +87,8 @@ router.get("/messages/conversation/:user1/:user2", (req, res) => {
   });
 });
 
-router.delete("/messages/:id", (req, res) => {
+// Delete message
+router.delete("/:id", (req, res) => {
   const id = toInt(req.params.id);
   if (!id) return fail(res, 400, "Invalid 'id'.");
   db.query("DELETE FROM message WHERE messageId = ?", [id], (err, result) => {

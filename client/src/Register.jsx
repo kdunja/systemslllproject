@@ -21,7 +21,7 @@ function Register() {
     e.preventDefault();
     setMessage("");
     try {
-      const res = await axios.post("/register", form, { validateStatus: () => true });
+      const res = await axios.post("/auth/register", form, { validateStatus: () => true });
       if (res.status === 201) {
         setMessage("Registration successful! Redirecting to login...");
         setTimeout(() => navigate("/login"), 800);

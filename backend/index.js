@@ -4,24 +4,26 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+
+// Core middleware
 app.disable("x-powered-by");
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-app.use("/", require("./routes/auth"));        
-app.use("/loads", require("./routes/load"));   
-app.use("/", require("./routes/cargo"));       
-app.use("/", require("./routes/message"));    
-app.use("/", require("./routes/rating"));     
-app.use("/admin", require("./routes/admin"));
+// Mount all API routes under /api (routes.js exports an Express router)
+const apiRouter = require("./routes.js");
+app.use("/api", apiRouter);
 
-
-app.get("/health", (req, res) => res.json({ ok: true }));
-
+// Static frontend files (built SPA)
 const clientDir = path.join(__dirname, "../client/dist");
 app.use(express.static(clientDir));
-app.get("*", (req, res) => res.sendFile(path.join(clientDir, "index.html")));
 
+// SPA catch-all for non-API paths
+app.get("*", (req, res) => {
+  res.sendFile(path.join(clientDir, "index.html"));
+});
+
+// Start server
 const PORT = process.env.PORT || 5176;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on http://88.200.63.148:${PORT}`);

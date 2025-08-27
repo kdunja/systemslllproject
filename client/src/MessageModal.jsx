@@ -18,9 +18,9 @@ function MessageModal({ recipientId, onClose }) {
     try {
       // use conversation endpoint (ascending order from backend)
       const res = await axios.get(
-        `/messages/conversation/${senderId}/${recipientId}`,
-        { validateStatus: () => true }
-      );
+  `/message/conversation/${senderId}/${recipientId}`,
+  { validateStatus: () => true }
+);
       const list = Array.isArray(res.data?.data)
         ? res.data.data
         : Array.isArray(res.data)
@@ -37,10 +37,11 @@ function MessageModal({ recipientId, onClose }) {
     if (!text.trim()) return;
     try {
       const res = await axios.post(
-        "/messages",
-        { senderId, recipientId, text },
-        { validateStatus: () => true }
-      );
+  "/message",
+  { senderId, recipientId, text },
+  { validateStatus: () => true }
+);
+
       if (res.status === 201) {
         setText("");
         await fetchConversation();

@@ -26,6 +26,11 @@ function isValidUsername(u) {
   return /^[a-zA-Z0-9_.-]{3,32}$/.test(u);
 }
 
+router.get("/_ping", (req, res) => {
+  res.json({ ok: true, from: "auth.js" });
+});
+
+
 router.post("/register", (req, res) => {
   const { username, email, password, role, name, surname, phonenumber } = req.body || {};
   if (!username || !email || !password) return fail(res, 400, "Fields 'username', 'email' and 'password' are required.");
